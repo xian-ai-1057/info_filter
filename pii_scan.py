@@ -18,6 +18,8 @@ INPUT_FILE = "data.xlsx"        # 來源 Excel 路徑
 COL1 = "欄位A"                   # 第一個要掃描的欄位名稱
 COL2 = "欄位B"                   # 第二個要掃描的欄位名稱
 OUTPUT_FILE = "pii_report.xlsx"  # 報表輸出路徑
+MARKED_FILE = "pii_marked.csv"   # 逐列標註輸出（原文 + 各類型命中 + 總和）
+JOIN_SEP = "; "                  # 同列同類型有多個命中時的分隔符
 # CKIP 姓名模型位置：
 #   留空 ""        → 線上自動下載 ckiplab/bert-base-chinese-ner（需網路）
 #   填本機資料夾路徑 → 用手動下載好的本機模型，並以離線模式執行
@@ -141,7 +143,33 @@ def main():
 
     print_report(col_counts)
     write_report(col_counts, all_details)
+    write_marked_csv(df, all_details)
     print(f"\n報表已輸出：{OUTPUT_FILE}")
+    print(f"逐列標註已輸出：{MARKED_FILE}")
+
+
+def write_marked_csv(df, all_details):
+    """輸出逐列標註 CSV：保留原始欄位，於其後依 TYPES 順序附加各類型命中內容，
+    並加上「總和」欄（該列命中總筆數，含重複）。
+
+    同一原始列、同一類型若有多個命中（含跨欄位A/欄位B），以 JOIN_SEP 串接於同一格。
+    """
+    # row_idx(對應 df 索引) -> {類型: [命中內容, ...]}
+    by_row = {}
+    for d in all_details:
+        row_idx = d['列號'] - 2  # 還原為 df 列索引（get_cells: i + 2）
+        by_row.setdefault(row_idx, {t: [] for t in TYPES})
+        by_row[row_idx][d['類型']].append(str(d['命中內容']))
+
+    out = df.copy()
+    for t in TYPES:
+        out[t] = [JOIN_SEP.join(by_row.get(i, {}).get(t, [])) for i in range(len(df))]
+    out['總和'] = [
+        sum(len(by_row[i][t]) for t in TYPES) if i in by_row else 0
+        for i in range(len(df))
+    ]
+
+    out.to_csv(MARKED_FILE, index=False, encoding='utf-8-sig')
 
 
 def print_report(col_counts):
