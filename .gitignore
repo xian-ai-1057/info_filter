@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 離線安裝 wheel 包 / 打包產物（不納入版控，體積過大）
+wheels_win64/
+*.zip
+
+# 掃描輸入/輸出檔
+data.xlsx
+pii_report.xlsx
