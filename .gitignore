@@ -11,3 +11,6 @@ wheels_win64/
 # 掃描輸入/輸出檔
 data.xlsx
 pii_report.xlsx
+
+# 手動下載的 CKIP 模型資料夾
+bert-base-chinese-ner/

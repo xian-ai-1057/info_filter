@@ -8,6 +8,7 @@
 執行方式：python pii_scan.py
 """
 
+import os
 import re
 
 import pandas as pd
@@ -17,6 +18,11 @@ INPUT_FILE = "data.xlsx"        # 來源 Excel 路徑
 COL1 = "欄位A"                   # 第一個要掃描的欄位名稱
 COL2 = "欄位B"                   # 第二個要掃描的欄位名稱
 OUTPUT_FILE = "pii_report.xlsx"  # 報表輸出路徑
+# CKIP 姓名模型位置：
+#   留空 ""        → 線上自動下載 ckiplab/bert-base-chinese-ner（需網路）
+#   填本機資料夾路徑 → 用手動下載好的本機模型，並以離線模式執行
+#   例：MODEL_PATH = r"C:\models\bert-base-chinese-ner"
+MODEL_PATH = ""
 # ────────────────────────────────────────────────
 
 # regex 個資樣式（原樣沿用）
@@ -105,10 +111,18 @@ def main():
                 f"請修改 pii_scan.py 頂端的 COL1 / COL2 設定。"
             )
 
-    # 載入 CKIP NER 模型（首次執行會自動下載權重，需網路）
-    print("載入 CKIP NER 模型中…（首次執行需下載權重）")
-    from ckip_transformers.nlp import CkipNerChunker
-    ner = CkipNerChunker(model="bert-base")
+    # 載入 CKIP NER 模型
+    if MODEL_PATH:
+        # 用本機模型 + 離線模式（環境變數須在 import transformers 前設定才生效）
+        os.environ.setdefault("HF_HUB_OFFLINE", "1")
+        os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+        print(f"載入 CKIP NER 模型中…（使用本機模型：{MODEL_PATH}）")
+        from ckip_transformers.nlp import CkipNerChunker
+        ner = CkipNerChunker(model_name=MODEL_PATH)
+    else:
+        print("載入 CKIP NER 模型中…（線上下載 ckiplab/bert-base-chinese-ner，首次需網路）")
+        from ckip_transformers.nlp import CkipNerChunker
+        ner = CkipNerChunker(model="bert-base")
 
     col_counts = {}      # {欄位名: {類型: 次數}}
     all_details = []     # 完整明細

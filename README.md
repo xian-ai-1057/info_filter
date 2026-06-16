@@ -34,6 +34,7 @@ INPUT_FILE = "data.xlsx"    # 來源 Excel
 COL1 = "欄位A"               # 第一個要掃描的欄位名稱
 COL2 = "欄位B"               # 第二個要掃描的欄位名稱
 OUTPUT_FILE = "pii_report.xlsx"
+MODEL_PATH = ""             # 留空＝線上下載；填本機模型資料夾＝離線使用（見下節）
 ```
 
 2. 執行：
@@ -41,6 +42,33 @@ OUTPUT_FILE = "pii_report.xlsx"
 ```bash
 python pii_scan.py
 ```
+
+## 使用本機（離線）模型
+
+若機器無法連上 `huggingface.co`，可先手動下載姓名 NER 模型，再用 `MODEL_PATH` 指向該資料夾。
+
+**1. 在有網路的機器下載模型** `ckiplab/bert-base-chinese-ner`，任一方式：
+
+```bash
+# 方式 A：huggingface-cli
+pip install -U "huggingface_hub[cli]"
+hf download ckiplab/bert-base-chinese-ner --local-dir bert-base-chinese-ner
+
+# 方式 B：git（需安裝 git-lfs）
+git lfs install
+git clone https://huggingface.co/ckiplab/bert-base-chinese-ner
+```
+
+下載後資料夾應包含模型與 tokenizer 檔，例如：
+`config.json`、`pytorch_model.bin`（或 `model.safetensors`）、`vocab.txt`、`tokenizer_config.json`、`special_tokens_map.json`。
+
+**2. 設定路徑**：把整個資料夾複製到目標機器，並在 `pii_scan.py` 設定：
+
+```python
+MODEL_PATH = r"C:\models\bert-base-chinese-ner"   # 指向你的模型資料夾
+```
+
+設定後程式會自動開啟離線模式（`HF_HUB_OFFLINE` / `TRANSFORMERS_OFFLINE`），執行時不再嘗試連網。
 
 ## 輸出
 
