@@ -12,6 +12,7 @@ import os
 import re
 
 import pandas as pd
+from tqdm import tqdm
 
 # ───────────── 設定（要改就改這幾行） ─────────────
 INPUT_FILE = "data.xlsx"        # 來源 Excel 路徑
@@ -60,15 +61,16 @@ patterns = {
 TYPES = list(patterns.keys()) + ['name']
 
 
-def scan_regex(cells):
+def scan_regex(cells, desc="regex 掃描"):
     """掃描一欄的所有 cell，回傳 {類型: 命中次數} 與明細清單。
 
     cells: list of (excel_row, text)
+    desc: 進度條顯示的說明文字
     明細: list of dict(欄位 由呼叫端補上)
     """
     counts = {t: 0 for t in patterns}
     details = []
-    for row, text in cells:
+    for row, text in tqdm(cells, desc=desc, unit="列"):
         for ptype, pat in patterns.items():
             for m in pat.finditer(text):
                 counts[ptype] += 1
@@ -129,9 +131,9 @@ def main():
     col_counts = {}      # {欄位名: {類型: 次數}}
     all_details = []     # 完整明細
 
-    for col in (COL1, COL2):
+    for col in tqdm((COL1, COL2), desc="欄位掃描進度", unit="欄"):
         cells = get_cells(df, col)
-        counts, details = scan_regex(cells)
+        counts, details = scan_regex(cells, desc=f"[{col}] regex 掃描")
         name_count, name_details = scan_names(cells, ner)
         counts['name'] = name_count
 

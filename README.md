@@ -72,6 +72,8 @@ MODEL_PATH = r"C:\models\bert-base-chinese-ner"   # 指向你的模型資料夾
 
 ## 輸出
 
+**進度條**：掃描期間終端機會以 [tqdm](https://github.com/tqdm/tqdm) 顯示進度條，包含整體欄位掃描進度、每個欄位的 regex 掃描進度，以及 CKIP NER 姓名掃描進度。
+
 **終端機**：每種類型在兩個欄位的命中筆數、合計，最後是每欄總和與全表總計。
 
 **Excel 報表 (`pii_report.xlsx`)**，三個工作表：
